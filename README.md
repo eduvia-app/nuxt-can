@@ -73,7 +73,7 @@ Now you can write directives that stay type-safe:
 
 ```vue
 <button v-if="__can__('employee', 'view')">View profile</button>
-<button v-if="(isReady) && __can__('employee', 'edit')">Edit profile</button>
+<button v-if="__can__('employee', 'edit') && (isReady)">Edit profile</button>
 <p v-if="!(__can__('employee', 'edit'))">Access denied</p>
 ```
 
@@ -101,10 +101,10 @@ Once the first branch of a conditional chain carries `v-can`, the transformer au
 Transforms into:
 
 ```vue
-<div v-if="(status === 'draft') && __can__('foo', 'bar')">
+<div v-if="__can__('foo', 'bar') && (status === 'draft')">
   Draft state
 </div>
-<div v-else-if="(status === 'pending') && __can__('foo', 'bar')">
+<div v-else-if="__can__('foo', 'bar') && (status === 'pending')">
   Pending state
 </div>
 <div v-else-if="__can__('foo', 'bar')">

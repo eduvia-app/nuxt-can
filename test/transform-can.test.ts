@@ -27,7 +27,7 @@ describe('transformCan', () => {
       <div v-if="isReady" v-can="can.contract.create" />
     `)
 
-    expect(code).toContain(`v-if="(isReady) && __can__('contract', 'create')"`)
+    expect(code).toContain(`v-if="__can__('contract', 'create') && (isReady)"`)
   })
 
   it('throws when v-cannot is used without a preceding v-can', () => {
@@ -56,8 +56,8 @@ describe('transformCan', () => {
       <p v-cannot>Denied</p>
     `)
 
-    expect(code).toContain(`v-if="(ready) && __can__('employee', 'view')"`)
-    expect(code).toContain(`v-else-if="(later) && __can__('employee', 'view')"`)
+    expect(code).toContain(`v-if="__can__('employee', 'view') && (ready)"`)
+    expect(code).toContain(`v-else-if="__can__('employee', 'view') && (later)"`)
     expect(code).toContain(`v-else-if="__can__('employee', 'view')"`)
     expect(code).toContain(`v-if="!(__can__('employee', 'view'))"`)
   })

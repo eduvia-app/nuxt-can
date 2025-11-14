@@ -317,7 +317,7 @@ function mergeGuardIntoConditional(params: {
     ctx.patches.push({
       start: ctx.templateStart + conditionDirective.loc.start.offset,
       end: ctx.templateStart + conditionDirective.loc.end.offset,
-      text: `v-if="(${conditionExpression}) && ${canInvocation}"`,
+      text: `v-if="${canInvocation} && (${conditionExpression})"`,
     })
 
     return
@@ -333,7 +333,7 @@ function mergeGuardIntoConditional(params: {
     ctx.patches.push({
       start: ctx.templateStart + conditionDirective.loc.start.offset,
       end: ctx.templateStart + conditionDirective.loc.end.offset,
-      text: `v-else-if="(${conditionExpression}) && ${canInvocation}"`,
+      text: `v-else-if="${canInvocation} && (${conditionExpression})"`,
     })
 
     return

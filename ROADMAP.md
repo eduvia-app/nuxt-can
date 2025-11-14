@@ -59,7 +59,7 @@ Ce document sert de guide de travail pour construire le plugin Nuxt et son trans
 ### 🚀 Phase 4 — Transformation des nœuds `v-can`
 - Convertir l’expression en chemin `['segment1','segment2',…]`.
 - Chercher un `v-if` existant :
-  - `v-if="expr"` → `v-if="(expr) && __can__(path)"`.
+  - `v-if="expr"` → `v-if="__can__(path) && (expr)"`.
   - Sans `v-if` → ajouter `v-if="__can__(path)"`.
 - Interdire `v-can` sur des éléments possédant déjà `v-else` / `v-else-if` (lever une erreur compilateur).
 
@@ -125,7 +125,7 @@ Avant :
 Après compilation :
 
 ```vue
-<div v-if="(isReady) && __can__('contract', 'edit')">
+<div v-if="__can__('contract', 'edit') && (isReady)">
   Modifier le contrat
 </div>
 ```
@@ -141,7 +141,7 @@ Avant :
 Après compilation :
 
 ```vue
-<button v-if="(ctaVisible) && __can__('employee', 'view')">Voir</button>
+<button v-if="__can__('employee', 'view') && (ctaVisible)">Voir</button>
 <p v-if="!__can__('employee', 'view')">Acces refuse</p>
 ```
 

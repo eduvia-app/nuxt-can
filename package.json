@@ -1,6 +1,6 @@
 {
   "name": "@eduvia-app/nuxt-can",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Nuxt directives (`v-can`, `v-cannot`) to layer permissions without touching business v-ifs.",
   "author": "Eduvia <engineering@eduvia.app>",
   "homepage": "https://github.com/eduvia-app/nuxt-can#readme",
