@@ -23,7 +23,8 @@ export default defineNuxtModule<ModuleOptions>({
   },
   async setup(options, nuxt) {
     const resolver = createResolver(import.meta.url)
-    const permissions = options.permissions ?? {}
+    /* eslint-disable-next-line */
+    const permissions = options.permissions ?? {} as any
     const canFunctionImport = options.canFunctionImport ?? DEFAULT_CAN_FUNCTION_IMPORT
     const reporter = options.reporter ?? false
 

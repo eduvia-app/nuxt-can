@@ -14,7 +14,8 @@ type NuxtCanChecker = (path: string[]) => boolean | Promise<boolean>
 export default defineNuxtPlugin((nuxtApp) => {
   const runtimeConfig = useRuntimeConfig()
   const moduleConfig = (runtimeConfig.public as { nuxtCan?: NuxtCanRuntimeConfig }).nuxtCan
-  const canProxy = createCanProxy()
+  /* eslint-disable-next-line */
+  const canProxy = createCanProxy() as any
   const canFunction = hostCan as NuxtCanChecker
 
   if (import.meta.dev && !moduleConfig?.canFunctionImport) {

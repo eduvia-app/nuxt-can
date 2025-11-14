@@ -5,7 +5,7 @@
     <section>
       <button
         id="can-view"
-        v-can="canProxy.employee.view"
+        v-can="can.employee.view"
       >
         Voir
       </button>
@@ -13,7 +13,7 @@
       <button
         v-if="isReady"
         id="can-edit"
-        v-can="canProxy.employee.edit"
+        v-can="can.employee.edit"
       >
         Editer
       </button>
@@ -27,7 +27,7 @@
 
     <section>
       <template v-if="showContracts">
-        <p v-can="canProxy.contract.create">
+        <p v-can="can.contract.create">
           Creation contrat
         </p>
         <p v-cannot>
@@ -43,7 +43,7 @@
       <h2>Suppression</h2>
       <button
         id="can-delete"
-        v-can="canProxy.employee.delete"
+        v-can="can.employee.delete"
       >
         Supprimer
       </button>
@@ -57,7 +57,7 @@
 
     <section>
       <p id="path-display">
-        {{ String(canProxy.employee.view) }}
+        {{ String(can.employee.view) }}
       </p>
     </section>
   </main>
@@ -66,17 +66,4 @@
 <script setup lang="ts">
 const isReady = true
 const showContracts = true
-interface FixturePermissions {
-  employee: {
-    view: boolean
-    edit: boolean
-    delete: boolean
-  }
-  contract: {
-    create: boolean
-  }
-}
-
-const nuxtApp = useNuxtApp()
-const canProxy = nuxtApp.$can as unknown as FixturePermissions
 </script>
