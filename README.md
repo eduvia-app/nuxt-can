@@ -5,29 +5,30 @@
 [![License][license-src]][license-href]
 [![Nuxt][nuxt-src]][nuxt-href]
 
-`nuxt-can` apporte deux directives Vue (`v-can`, `v-cannot`) pour écrire des permissions ultra lisibles dans les templates Nuxt. Les directives sont transformées à la compilation en appels à une fonction `__can__` fournie par l’application hôte tout en restant 100 % tree-shake friendly et parfaitement typées côté TypeScript.
+`nuxt-can` ships two Vue directives (`v-can`, `v-cannot`) so you can encode permissions directly in Nuxt templates. Each directive is transformed at build time into a composable `__can__` call provided by your app, keeping the runtime lean, tree-shake friendly, and fully typed.
 
-- [✨ &nbsp;Release Notes](/CHANGELOG.md)
+- [✨ Release Notes](/CHANGELOG.md)
 
-## Features
+## Highlights
 
-- ✅ Directives `v-can` / `v-cannot` transformées en `v-if` / `!v-if`
-- ✅ Merge automatique avec des `v-if` existants (pas de runtime inutile)
-- ✅ Proxy global `can` + types générés selon votre configuration de permissions
-- ✅ Import configurable de la fonction `__can__` (store, API, …)
-- ✅ Erreurs compile-time claires (cas interdits détectés avant build)
+- ✅ Cleanly adds permissions to existing templates without rewriting your business `v-if`s
+- ✅ Compile-time transform of `v-can` / `v-cannot` into `v-if` guards
+- ✅ Smart merge with existing `v-if` conditions (no extra wrappers)
+- ✅ Auto-generated `can` proxy with types derived from your permissions map
+- ✅ Pluggable import of the host `__can__` function (stores, APIs, etc.)
+- ✅ Helpful DX errors for unsupported directive shapes
 
-## Quick Setup
+## Quick Start
 
-Installez le module dans votre application Nuxt :
+Install the module in your Nuxt app:
 
 ```bash
 npm install nuxt-can
-# ou
+# or
 npx nuxi module add nuxt-can
 ```
 
-Déclarez ensuite le module et configurez vos permissions :
+Enable it inside `nuxt.config.ts` and describe the permissions tree:
 
 ```ts
 // nuxt.config.ts
@@ -40,12 +41,12 @@ export default defineNuxtConfig({
       employee: ['view', 'edit'],
       contract: ['create'],
     },
-    canFunctionImport: '~/permissions/can', // chemin vers votre implémentation __can__
+    canFunctionImport: '~/permissions/can', // path to your __can__ implementation
   },
 })
 ```
 
-Implémentez la fonction `__can__` dans le fichier ciblé (`~/permissions/can` dans l’exemple) :
+Provide the `__can__` implementation referenced above:
 
 ```ts
 // permissions/can.ts
@@ -56,88 +57,107 @@ export function __can__(path: string[]) {
 }
 ```
 
-Le module génère automatiquement un proxy `can` typé :
+Now you can write directives that stay type-safe:
 
 ```vue
 <template>
-  <button v-can="can.employee.view">Voir le dossier</button>
+  <button v-can="can.employee.view">View profile</button>
   <button v-if="isReady" v-can="can.employee.edit">
-    Modifier
+    Edit profile
   </button>
-  <p v-cannot>Accès refusé</p>
+  <p v-cannot>Access denied</p>
 </template>
 ```
 
-Résultat compilé :
+…and the compiler rewrites them into plain conditionals:
 
 ```vue
-<button v-if="__can__(['employee', 'view'])">Voir le dossier</button>
-<button v-if="(isReady) && __can__(['employee', 'edit'])">Modifier</button>
-<p v-if="!(__can__(['employee', 'edit']))">Accès refusé</p>
+<button v-if="__can__(['employee', 'view'])">View profile</button>
+<button v-if="(isReady) && __can__(['employee', 'edit'])">Edit profile</button>
+<p v-if="!(__can__(['employee', 'edit']))">Access denied</p>
 ```
 
-### Règles et erreurs surveillées
+## Usage Rules & Errors
 
-- `v-cannot` doit suivre immédiatement un `v-can` (aucun autre composant entre les deux).
-- Un `v-can` ne peut pas cohabiter avec `v-else` / `v-else-if`.
-- `v-cannot` n’accepte ni expression, ni argument, ni `v-if`.
-- Un seul `v-cannot` par `v-can`.
-- Les expressions doivent suivre le pattern `can.x.y` (au moins deux niveaux après `can`).
+The transformer validates every template and throws descriptive errors when:
 
-Toute violation produit une erreur compile-time lisible.
+- `v-cannot` does not immediately follow its matching `v-can`.
+- `v-can` appears on an element already using `v-else` / `v-else-if`.
+- `v-cannot` uses an argument, modifiers, or a `v-if` condition.
+- Multiple `v-cannot` blocks exist for the same `v-can`.
+- The expression is not a static dotted path like `can.resource.action`.
 
-### Types générés
+## Generated Types
 
-À partir de la clé `permissions`, le module génère un fichier `.d.ts` qui expose :
+The `permissions` map feeds a generated `types/nuxt-can.d.ts` declaration that augments:
 
-- `can` / `$can` sur `ComponentCustomProperties`
-- `__can__` sur les templates/scripts Nuxt
-- `NuxtApp.$can` et `NuxtApp.$__can__`
+- `ComponentCustomProperties` with `can`, `$can`, and `__can__`.
+- `NuxtApp` with `$can` and `$__can__`.
+- Runtime typings for the `#build/nuxt-can/can-import.mjs` bridge.
 
-La DX template + TypeScript reste donc impeccable sans configuration additionnelle.
+No extra setup is required for editors or strict TypeScript projects.
 
+## Why `v-can`?
 
-## Contribution
+Retrofitting authorization into an existing codebase often means revisiting every `v-if` to sprinkle permission checks alongside business logic. That makes templates harder to read, increases the risk of regressions, and couples security rules with UI state management. `v-can` and `v-cannot` isolate the permission layer: you keep your original conditions untouched while the transformer injects the `__can__` guards for you. As a result, business logic stays readable, authorization lives in one place, and code reviews can focus on either concern without stepping on each other.
 
-<details>
-  <summary>Local development</summary>
-  
-  ```bash
-  # Install dependencies
-  npm install
-  
-  # Generate type stubs
-  npm run dev:prepare
-  
-  # Develop with the playground
-  npm run dev
-  
-  # Build the playground
-  npm run dev:build
-  
-  # Run ESLint
-  npm run lint
-  
-  # Run Vitest
-  npm run test
-  npm run test:watch
-  
-  # Release new version
-  npm run release
-  ```
+## Playground
 
-</details>
+Run `npm run dev` to explore the playground app located in `/playground`. It demonstrates:
 
+- Stacked `v-can` / `v-cannot` pairs.
+- Interaction with existing `v-if`s and `v-for`s.
+- Template blocks that share the same permission guard.
+- A live permission summary powered by the injected `__can__` function.
+
+Feel free to wire your own `~/playground/permissions/__can__.ts` to mimic a real backend.
+
+## Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Prepare type stubs and the playground
+npm run dev:prepare
+
+# Playground dev server
+npm run dev
+
+# Build the playground
+npm run dev:build
+
+# Lint & tests
+npm run lint
+npm run test
+npm run test:watch
+
+# Type checks (module + playground)
+npm run test:types
+
+# Release pipeline
+npm run release
+```
+
+## Contributing
+
+1. Fork & clone the repo.
+2. Run `npm run dev:prepare` once to scaffold stubs.
+3. Use the playground (`npm run dev`) to reproduce issues.
+4. Add tests under `test/` and fixtures under `test/fixtures/*`.
+5. Open a PR following Conventional Commits (e.g. `feat:`, `fix:`).
+
+---
 
 <!-- Badges -->
-[npm-version-src]: https://img.shields.io/npm/v/my-module/latest.svg?style=flat&colorA=020420&colorB=00DC82
-[npm-version-href]: https://npmjs.com/package/my-module
+[npm-version-src]: https://img.shields.io/npm/v/nuxt-can/latest.svg?style=flat&colorA=020420&colorB=00DC82
+[npm-version-href]: https://npmjs.com/package/nuxt-can
 
-[npm-downloads-src]: https://img.shields.io/npm/dm/my-module.svg?style=flat&colorA=020420&colorB=00DC82
-[npm-downloads-href]: https://npm.chart.dev/my-module
+[npm-downloads-src]: https://img.shields.io/npm/dm/nuxt-can.svg?style=flat&colorA=020420&colorB=00DC82
+[npm-downloads-href]: https://npm.chart.dev/nuxt-can
 
-[license-src]: https://img.shields.io/npm/l/my-module.svg?style=flat&colorA=020420&colorB=00DC82
-[license-href]: https://npmjs.com/package/my-module
+[license-src]: https://img.shields.io/npm/l/nuxt-can.svg?style=flat&colorA=020420&colorB=00DC82
+[license-href]: https://npmjs.com/package/nuxt-can
 
 [nuxt-src]: https://img.shields.io/badge/Nuxt-020420?logo=nuxt.js
 [nuxt-href]: https://nuxt.com
