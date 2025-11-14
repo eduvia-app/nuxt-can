@@ -23,16 +23,16 @@
 Install the module in your Nuxt app:
 
 ```bash
-npm install nuxt-can
+npm install @eduvia-app/nuxt-can
 # or
-npx nuxi module add nuxt-can
+npx nuxi module add @eduvia-app/nuxt-can
 ```
 
 Enable it inside `nuxt.config.ts` and describe the permissions tree:
 
 ```ts
 // nuxt.config.ts
-import NuxtCan from 'nuxt-can'
+import NuxtCan from '@eduvia-app/nuxt-can'
 
 export default defineNuxtConfig({
   modules: [NuxtCan],
@@ -150,14 +150,14 @@ npm run release
 ---
 
 <!-- Badges -->
-[npm-version-src]: https://img.shields.io/npm/v/nuxt-can/latest.svg?style=flat&colorA=020420&colorB=00DC82
-[npm-version-href]: https://npmjs.com/package/nuxt-can
+[npm-version-src]: https://img.shields.io/npm/v/%40eduvia-app%2Fnuxt-can/latest.svg?style=flat&colorA=020420&colorB=00DC82
+[npm-version-href]: https://npmjs.com/package/@eduvia-app/nuxt-can
 
-[npm-downloads-src]: https://img.shields.io/npm/dm/nuxt-can.svg?style=flat&colorA=020420&colorB=00DC82
-[npm-downloads-href]: https://npm.chart.dev/nuxt-can
+[npm-downloads-src]: https://img.shields.io/npm/dm/%40eduvia-app%2Fnuxt-can.svg?style=flat&colorA=020420&colorB=00DC82
+[npm-downloads-href]: https://npm.chart.dev/@eduvia-app/nuxt-can
 
-[license-src]: https://img.shields.io/npm/l/nuxt-can.svg?style=flat&colorA=020420&colorB=00DC82
-[license-href]: https://npmjs.com/package/nuxt-can
+[license-src]: https://img.shields.io/npm/l/%40eduvia-app%2Fnuxt-can.svg?style=flat&colorA=020420&colorB=00DC82
+[license-href]: https://npmjs.com/package/@eduvia-app/nuxt-can
 
 [nuxt-src]: https://img.shields.io/badge/Nuxt-020420?logo=nuxt.js
 [nuxt-href]: https://nuxt.com
