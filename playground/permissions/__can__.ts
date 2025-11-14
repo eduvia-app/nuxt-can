@@ -6,7 +6,7 @@ export function __can__(path: string[]) {
     'contract.create',
   ])
 
-  // return allowed.has(key)
-  console.log('Checking permission:', key)
-  return false
+  const granted = allowed.has(key)
+  console.log('Checking permission:', key, '->', granted)
+  return granted
 }

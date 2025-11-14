@@ -1,0 +1,5 @@
+export const CONFIG_KEY = 'nuxtCan'
+export const CAN_IMPORT_TEMPLATE_FILENAME = 'nuxt-can/can-import.mjs'
+export const TYPES_TEMPLATE_FILENAME = 'types/nuxt-can.d.ts'
+export const DEFAULT_CAN_FUNCTION_IMPORT = '~/permissions/__can__'
+export const INDENT = '  '

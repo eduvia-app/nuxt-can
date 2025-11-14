@@ -3,6 +3,7 @@ import {
   type TemplateChildNode,
   type ElementNode,
   type DirectiveNode,
+  type SourceLocation,
   NodeTypes,
 } from '@vue/compiler-dom'
 
@@ -19,6 +20,9 @@ interface WalkerContext {
 interface PendingCan {
   expression: string
 }
+
+const CAN_IDENTIFIER = new Set(['can', '$can'])
+const SEGMENT_PATTERN = /^[\w-]+$/u
 
 export function collectCanPatches(ast: RootNode, templateStart: number, filename?: string): Patch[] {
   const ctx: WalkerContext = {
@@ -70,12 +74,16 @@ function handleElement(element: ElementNode, ctx: WalkerContext, pendingCan: Pen
   let canDirective: DirectiveNode | null = null
   let cannotDirective: DirectiveNode | null = null
   let ifDirective: DirectiveNode | null = null
+  let elseDirective: DirectiveNode | null = null
+  let elseIfDirective: DirectiveNode | null = null
 
   for (const prop of element.props) {
     if (prop.type !== NodeTypes.DIRECTIVE) continue
     if (prop.name === 'can') canDirective = prop
     if (prop.name === 'cannot') cannotDirective = prop
     if (prop.name === 'if') ifDirective = prop
+    if (prop.name === 'else') elseDirective = prop
+    if (prop.name === 'else-if') elseIfDirective = prop
   }
 
   if (canDirective && cannotDirective) {
@@ -98,6 +106,7 @@ function handleElement(element: ElementNode, ctx: WalkerContext, pendingCan: Pen
       canDirective,
       ifDirective,
       ctx,
+      hasElseLike: Boolean(elseDirective || elseIfDirective),
     })
 
     return {
@@ -112,17 +121,33 @@ function transformCanDirective(params: {
   canDirective: DirectiveNode
   ifDirective: DirectiveNode | null
   ctx: WalkerContext
+  hasElseLike: boolean
 }): string {
-  const { canDirective, ifDirective, ctx } = params
+  const { canDirective, ifDirective, ctx, hasElseLike } = params
+
+  if (hasElseLike) {
+    raiseDirectiveError(ctx, canDirective.loc, '`v-can` cannot be used on `v-else` or `v-else-if` branches; wrap the conditional block in a <template> and apply `v-can` inside it.')
+  }
 
   if (canDirective.exp?.type !== NodeTypes.SIMPLE_EXPRESSION) {
     raiseDirectiveError(ctx, canDirective.loc, '`v-can` expects a static expression (for example `v-can="can.x.y"`).')
   }
 
-  const canExpression = canDirective.exp.content?.trim()
-  if (!canExpression) {
+  if (canDirective.arg) {
+    raiseDirectiveError(ctx, canDirective.loc, '`v-can` does not accept arguments.')
+  }
+
+  if (canDirective.modifiers.length) {
+    raiseDirectiveError(ctx, canDirective.loc, '`v-can` does not accept modifiers.')
+  }
+
+  const expressionContent = canDirective.exp.content?.trim()
+  if (!expressionContent) {
     raiseDirectiveError(ctx, canDirective.loc, '`v-can` requires a valid permission expression such as `can.employee.view`.')
   }
+
+  const pathSegments = parseCanExpression(expressionContent, ctx, canDirective.loc)
+  const canInvocation = buildCanInvocation(pathSegments)
 
   if (ifDirective && ifDirective.exp?.type === NodeTypes.SIMPLE_EXPRESSION) {
     const ifExpression = (ifDirective.exp.content || 'true').trim() || 'true'
@@ -130,7 +155,7 @@ function transformCanDirective(params: {
     ctx.patches.push({
       start: ctx.templateStart + ifDirective.loc.start.offset,
       end: ctx.templateStart + ifDirective.loc.end.offset,
-      text: `v-if="(${canExpression}) && (${ifExpression})"`,
+      text: `v-if="(${ifExpression}) && ${canInvocation}"`,
     })
 
     ctx.patches.push({
@@ -143,11 +168,11 @@ function transformCanDirective(params: {
     ctx.patches.push({
       start: ctx.templateStart + canDirective.loc.start.offset,
       end: ctx.templateStart + canDirective.loc.end.offset,
-      text: `v-if="${canExpression}"`,
+      text: `v-if="${canInvocation}"`,
     })
   }
 
-  return canExpression
+  return canInvocation
 }
 
 function transformCannotDirective(params: {
@@ -183,4 +208,37 @@ function transformCannotDirective(params: {
     end: ctx.templateStart + directive.loc.end.offset,
     text: `v-if="!(${pendingCan.expression})"`,
   })
+}
+
+function parseCanExpression(expression: string, ctx: WalkerContext, loc: SourceLocation): string[] {
+  const trimmed = expression.trim()
+  if (!trimmed.length) {
+    raiseDirectiveError(ctx, loc, '`v-can` requires a permission expression such as `can.resource.action`.')
+  }
+
+  const parts = trimmed.split('.')
+  const root = parts.shift()
+  const segments = parts
+
+  if (!root || !CAN_IDENTIFIER.has(root)) {
+    raiseDirectiveError(ctx, loc, '`v-can` expressions must start with `can.` or `$can.` (e.g. `v-can="can.employee.view"`).')
+  }
+
+  if (segments.length < 2) {
+    raiseDirectiveError(ctx, loc, '`v-can` expects at least a resource and action (for example `can.employee.view`).')
+  }
+
+  if (segments.some(segment => !segment.length || !SEGMENT_PATTERN.test(segment))) {
+    raiseDirectiveError(ctx, loc, '`v-can` only supports static dotted paths (letters, numbers, `_`, or `-`).')
+  }
+
+  return segments
+}
+
+function buildCanInvocation(segments: string[]): string {
+  const escapedSegments = segments
+    .map(segment => `'${segment.replace(/\\/g, '\\\\').replace(/'/g, '\\u0027')}'`)
+    .join(', ')
+
+  return `__can__([${escapedSegments}])`
 }

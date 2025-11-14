@@ -1,7 +1,14 @@
-import MyModule from '../../../src/module'
+import NuxtCan from '../../../src/module'
 
 export default defineNuxtConfig({
   modules: [
-    MyModule,
+    NuxtCan,
   ],
+  nuxtCan: {
+    permissions: {
+      employee: ['view', 'edit', 'delete'],
+      contract: ['create'],
+    },
+    canFunctionImport: '~/permissions/__can__',
+  },
 })

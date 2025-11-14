@@ -22,7 +22,7 @@ export function transformCan({ code, id, reporter }: TransformInput) {
   const templateEnd = tpl.loc.end.offset
   const before = code.slice(templateStart, templateEnd)
 
-  if (!before.includes('v-can'))
+  if (!before.includes('v-can') && !before.includes('v-cannot'))
     return null
 
   const ast = parseTemplate(before, { comments: true })
@@ -40,6 +40,12 @@ export function transformCan({ code, id, reporter }: TransformInput) {
 
   return {
     code: nextCode,
-    map: null,
+    map: {
+      version: 3,
+      sources: [id],
+      names: [],
+      mappings: '',
+      sourcesContent: [nextCode],
+    },
   }
 }

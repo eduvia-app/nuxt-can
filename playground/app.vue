@@ -1,30 +1,28 @@
 <template>
-  <button v-if="true" id="btn-view" v-can="true">
-    Voir le dossier 2
-  </button>
-  <div v-cannot>
-    v-else
-  </div>
-
-  <button v-if="isReady && can.employee.edit" id="btn-edit" v-can="true">
-    Modifier le dossier
-  </button>
+  <main class="page">
+    <div v-can="can.baz.dskj">
+      foo.bar
+    </div>
+    <div v-cannot>
+      cannot
+    </div>
+  </main>
 </template>
 
 <script setup lang="ts">
-const isReady = true
-const can = {
-  employee: {
-    view: 'view_employee',
-    edit: 'edit_employee',
-  },
-}
 </script>
 
 <style scoped>
 .page {
   padding: 2rem;
   font-family: system-ui, sans-serif;
+}
+
+header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 section {
@@ -35,7 +33,51 @@ section {
   background: #fff;
 }
 
+.card h2 {
+  margin-top: 0;
+}
+
 button {
   margin-right: 0.75rem;
+}
+
+.ghost {
+  background: transparent;
+  border: 1px solid #cbd5f5;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.toggle {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid #edf2f7;
+}
+
+li:last-child {
+  border-bottom: 0;
+}
+
+.allowed {
+  color: #15803d;
+}
+
+.denied {
+  color: #b91c1c;
 }
 </style>
