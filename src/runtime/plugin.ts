@@ -9,7 +9,7 @@ interface NuxtCanRuntimeConfig {
   canFunctionImport: string
 }
 
-type NuxtCanChecker = (path: string[]) => boolean | Promise<boolean>
+type NuxtCanChecker = (...path: string[]) => boolean | Promise<boolean>
 
 export default defineNuxtPlugin((nuxtApp) => {
   const runtimeConfig = useRuntimeConfig()

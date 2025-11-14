@@ -110,7 +110,7 @@ Avant :
 Après compilation :
 
 ```vue
-<button v-if="__can__(['employee', 'view'])">Voir le dossier</button>
+<button v-if="__can__('employee', 'view')">Voir le dossier</button>
 ```
 
 ### Exemple 2 — `v-if` + `v-can`
@@ -125,7 +125,7 @@ Avant :
 Après compilation :
 
 ```vue
-<div v-if="(isReady) && __can__(['contract', 'edit'])">
+<div v-if="(isReady) && __can__('contract', 'edit')">
   Modifier le contrat
 </div>
 ```
@@ -141,8 +141,8 @@ Avant :
 Après compilation :
 
 ```vue
-<button v-if="(ctaVisible) && __can__(['employee', 'view'])">Voir</button>
-<p v-if="!__can__(['employee', 'view'])">Acces refuse</p>
+<button v-if="(ctaVisible) && __can__('employee', 'view')">Voir</button>
+<p v-if="!__can__('employee', 'view')">Acces refuse</p>
 ```
 
 ### Exemple 4 — `v-if` / `v-else-if` / `v-else` + `v-can` / `v-cannot`
@@ -166,8 +166,8 @@ Résultat :
 
 ```vue
 <template v-if="isOwner">
-  <button v-if="__can__(['employee', 'edit'])">Modifier</button>
-  <p v-if="!__can__(['employee', 'edit'])">Contactez votre admin</p>
+  <button v-if="__can__('employee', 'edit')">Modifier</button>
+  <p v-if="!__can__('employee', 'edit')">Contactez votre admin</p>
 </template>
 <template v-else-if="isManager">
   <p>Vue manager</p>

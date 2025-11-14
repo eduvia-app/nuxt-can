@@ -52,7 +52,7 @@ Provide the `__can__` implementation referenced above:
 // permissions/can.ts
 const permissionsStore = usePermissionsStore()
 
-export function __can__(path: string[]) {
+export function __can__(...path: string[]) {
   return permissionsStore.check(path.join('.'))
 }
 ```
@@ -72,18 +72,94 @@ Now you can write directives that stay type-safe:
 …and the compiler rewrites them into plain conditionals:
 
 ```vue
-<button v-if="__can__(['employee', 'view'])">View profile</button>
-<button v-if="(isReady) && __can__(['employee', 'edit'])">Edit profile</button>
-<p v-if="!(__can__(['employee', 'edit']))">Access denied</p>
+<button v-if="__can__('employee', 'view')">View profile</button>
+<button v-if="(isReady) && __can__('employee', 'edit')">Edit profile</button>
+<p v-if="!(__can__('employee', 'edit'))">Access denied</p>
+```
+
+## Directive Patterns
+
+### Guard entire `v-if` / `v-else-if` / `v-else` chains
+
+Once the first branch of a conditional chain carries `v-can`, the transformer automatically mirrors that guard (with the same permission path) on every subsequent `v-else-if` and `v-else`. You can still repeat the directive manually for clarity, but it’s no longer required.
+
+```vue
+<div v-if="status === 'draft'" v-can="can.foo.bar">
+  Draft state
+</div>
+<div v-else-if="status === 'pending'">
+  Pending state
+</div>
+<div v-else>
+  Fallback state
+</div>
+<div v-cannot="can.foo.bar">
+  Missing permission
+</div>
+```
+
+Transforms into:
+
+```vue
+<div v-if="(status === 'draft') && __can__('foo', 'bar')">
+  Draft state
+</div>
+<div v-else-if="(status === 'pending') && __can__('foo', 'bar')">
+  Pending state
+</div>
+<div v-else-if="__can__('foo', 'bar')">
+  Fallback state
+</div>
+<div v-if="!__can__('foo', 'bar')">
+  Missing permission
+</div>
+```
+
+### Pass arguments to `v-cannot`
+
+`v-cannot` can mirror the permission expression used by its matching `v-can` by adding the same argument (`v-cannot="can.foo.bar"`). When no argument is specified, the directive must immediately follow the preceding `v-can` block so the transformer can re-use that context.
+
+```vue
+<button v-can="can.contract.submit">Submit contract</button>
+<p v-cannot="can.contract.submit">Contact your admin to unlock submissions.</p>
+
+<template>
+  <button v-if="isReady" v-can="can.contract.edit">Edit</button>
+  <p v-cannot>Only editors can update this contract.</p>
+</template>
+
+<!-- Need to wrap the fallback? pass the expression explicitly -->
+<div class="notice">
+  <p v-cannot="can.contract.edit">Only editors can update this contract.</p>
+</div>
+```
+
+Both `v-cannot` branches above compile to `v-if="!__can__('contract', 'submit')"` and `v-if="!__can__('contract', 'edit')"` respectively.
+
+### Keep `v-cannot` next to its `v-can`
+
+When `v-cannot` omits an expression, it must immediately follow the guarded block:
+
+```vue
+<div v-if="isReady" v-can="can.foo.bar">Ready!</div>
+<p v-cannot>Not allowed</p> <!-- ✅ adjacent, guard is inferred -->
+
+<div>
+  <p v-cannot>Not allowed</p> <!-- ❌ wrapped, missing explicit expression -->
+</div>
+
+<div>
+  <p v-cannot="can.foo.bar">Not allowed</p> <!-- ✅ wrapper + explicit permission -->
+</div>
 ```
 
 ## Usage Rules & Errors
 
 The transformer validates every template and throws descriptive errors when:
 
-- `v-cannot` does not immediately follow its matching `v-can`.
-- `v-can` appears on an element already using `v-else` / `v-else-if`.
-- `v-cannot` uses an argument, modifiers, or a `v-if` condition.
+- `v-can` expressions differ within the same `v-if` / `v-else-if` / `v-else` block (the guard is mirrored automatically, but mixed expressions are disallowed).
+- `v-cannot` without an argument is separated from its originating `v-can`.
+- `v-cannot` mixes in modifiers or a `v-if` condition (keep it standalone).
 - Multiple `v-cannot` blocks exist for the same `v-can`.
 - The expression is not a static dotted path like `can.resource.action`.
 

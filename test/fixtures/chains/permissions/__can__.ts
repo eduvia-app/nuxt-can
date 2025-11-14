@@ -1,8 +1,4 @@
-const granted = new Set([
-  'employee.view',
-  'employee.edit',
-  'contract.create',
-])
+const granted = new Set<string>([])
 
 export function __can__(...path: string[]) {
   const key = path.join('.')

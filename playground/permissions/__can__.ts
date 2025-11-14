@@ -1,4 +1,4 @@
-export function __can__(path: string[]) {
+export function __can__(...path: string[]) {
   const key = path.join('.')
   const allowed = new Set([
     'employee.view',
@@ -8,5 +8,5 @@ export function __can__(path: string[]) {
 
   const granted = allowed.has(key)
   console.log('Checking permission:', key, '->', granted)
-  return granted
+  return false
 }
