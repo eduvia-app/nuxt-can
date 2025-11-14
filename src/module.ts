@@ -1,21 +1,31 @@
-import { defineNuxtModule, addPlugin, createResolver } from '@nuxt/kit'
+// modules/nuxt-can.ts
+import { defineNuxtModule, addVitePlugin } from '@nuxt/kit'
 
-// Module options TypeScript interface definition
+import { transformCan } from './runtime/transformer/transform-can'
+
 export interface ModuleOptions {
-  0: string
+  reporter: boolean
 }
+
+export const CONFIG_KEY = 'nuxtCan'
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
-    name: 'my-module',
-    configKey: 'myModule',
+    name: 'nuxt-can',
+    configKey: CONFIG_KEY,
   },
-  // Default configuration options of the Nuxt module
-  defaults: {},
-  setup(_options, _nuxt) {
-    const resolver = createResolver(import.meta.url)
 
-    // Do not add the extension since the `.ts` will be transpiled to `.mjs` after `npm run prepack`
-    addPlugin(resolver.resolve('./runtime/plugin'))
+  defaults: {
+    reporter: false,
+  },
+
+  setup(options) {
+    addVitePlugin({
+      name: 'vite-plugin-nuxt-can',
+      enforce: 'pre',
+      transform(code, id) {
+        return transformCan({ code, id, reporter: options.reporter })
+      },
+    })
   },
 })

@@ -1,41 +1,100 @@
-<!--
-Get your module up and running quickly.
-
-Find and replace all on all files (CMD+SHIFT+F):
-- Name: My Module
-- Package name: my-module
-- Description: My new Nuxt module
--->
-
-# My Module
+# nuxt-can
 
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
 [![License][license-src]][license-href]
 [![Nuxt][nuxt-src]][nuxt-href]
 
-My new Nuxt module for doing amazing things.
+`nuxt-can` apporte deux directives Vue (`v-can`, `v-cannot`) pour écrire des permissions ultra lisibles dans les templates Nuxt. Les directives sont transformées à la compilation en appels à une fonction `__can__` fournie par l’application hôte tout en restant 100 % tree-shake friendly et parfaitement typées côté TypeScript.
 
 - [✨ &nbsp;Release Notes](/CHANGELOG.md)
-<!-- - [🏀 Online playground](https://stackblitz.com/github/your-org/my-module?file=playground%2Fapp.vue) -->
-<!-- - [📖 &nbsp;Documentation](https://example.com) -->
 
 ## Features
 
-<!-- Highlight some of the features your module provide here -->
-- ⛰ &nbsp;Foo
-- 🚠 &nbsp;Bar
-- 🌲 &nbsp;Baz
+- ✅ Directives `v-can` / `v-cannot` transformées en `v-if` / `!v-if`
+- ✅ Merge automatique avec des `v-if` existants (pas de runtime inutile)
+- ✅ Proxy global `can` + types générés selon votre configuration de permissions
+- ✅ Import configurable de la fonction `__can__` (store, API, …)
+- ✅ Erreurs compile-time claires (cas interdits détectés avant build)
 
 ## Quick Setup
 
-Install the module to your Nuxt application with one command:
+Installez le module dans votre application Nuxt :
 
 ```bash
-npx nuxi module add my-module
+npm install nuxt-can
+# ou
+npx nuxi module add nuxt-can
 ```
 
-That's it! You can now use My Module in your Nuxt app ✨
+Déclarez ensuite le module et configurez vos permissions :
+
+```ts
+// nuxt.config.ts
+import NuxtCan from 'nuxt-can'
+
+export default defineNuxtConfig({
+  modules: [NuxtCan],
+  nuxtCan: {
+    permissions: {
+      employee: ['view', 'edit'],
+      contract: ['create'],
+    },
+    canFunctionImport: '~/permissions/can', // chemin vers votre implémentation __can__
+  },
+})
+```
+
+Implémentez la fonction `__can__` dans le fichier ciblé (`~/permissions/can` dans l’exemple) :
+
+```ts
+// permissions/can.ts
+const permissionsStore = usePermissionsStore()
+
+export function __can__(path: string[]) {
+  return permissionsStore.check(path.join('.'))
+}
+```
+
+Le module génère automatiquement un proxy `can` typé :
+
+```vue
+<template>
+  <button v-can="can.employee.view">Voir le dossier</button>
+  <button v-if="isReady" v-can="can.employee.edit">
+    Modifier
+  </button>
+  <p v-cannot>Accès refusé</p>
+</template>
+```
+
+Résultat compilé :
+
+```vue
+<button v-if="__can__(['employee', 'view'])">Voir le dossier</button>
+<button v-if="(isReady) && __can__(['employee', 'edit'])">Modifier</button>
+<p v-if="!(__can__(['employee', 'edit']))">Accès refusé</p>
+```
+
+### Règles et erreurs surveillées
+
+- `v-cannot` doit suivre immédiatement un `v-can` (aucun autre composant entre les deux).
+- Un `v-can` ne peut pas cohabiter avec `v-else` / `v-else-if`.
+- `v-cannot` n’accepte ni expression, ni argument, ni `v-if`.
+- Un seul `v-cannot` par `v-can`.
+- Les expressions doivent suivre le pattern `can.x.y` (au moins deux niveaux après `can`).
+
+Toute violation produit une erreur compile-time lisible.
+
+### Types générés
+
+À partir de la clé `permissions`, le module génère un fichier `.d.ts` qui expose :
+
+- `can` / `$can` sur `ComponentCustomProperties`
+- `__can__` sur les templates/scripts Nuxt
+- `NuxtApp.$can` et `NuxtApp.$__can__`
+
+La DX template + TypeScript reste donc impeccable sans configuration additionnelle.
 
 
 ## Contribution

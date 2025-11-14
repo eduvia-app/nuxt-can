@@ -1,0 +1,23 @@
+// Project-local debug tasks
+//
+// For more documentation on how to configure debug tasks,
+// see: https://zed.dev/docs/debugger
+[
+  {
+    "adapter": "JavaScript",
+    "label": "package.json > dev",
+    "request": "launch",
+    "type": "pwa-node",
+    "args": [
+      "run",
+      "dev"
+    ],
+    "cwd": "/Users/stani/Documents/campus-prive/apti-connect/nuxt-can",
+    "runtimeExecutable": "$ZED_CUSTOM_TYPESCRIPT_RUNNER",
+    "env": {},
+    "runtimeArgs": [
+      "--inspect-brk"
+    ],
+    "console": "integratedTerminal"
+  }
+]
